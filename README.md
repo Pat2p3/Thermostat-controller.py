@@ -5,7 +5,7 @@ Thermostat-controller.py polls the temperature_sensor.ino getting readings in ce
 The heat turns on at temp_goal and off at temp_goal + 0.3 providing a 0.3 degree range. 
 
 The source Thermostat-controller.py communicates with replicas temperature_sensor.ino and heater_controller.ino through http. 
-All devices should be on the same local network. IP addresses of replicas are used in the Thermostat-controller.py 
+All devices should be on the same local network. IP addresses of replicas are used in the Thermostat-controller.py. The ds18b20 temperature sensor is used in the replia. 
 
 ## python variables
 temp_goal set the temperature goal in Celcius, at this goal the heater turns on. At temp_goal + 0.3 it turns off.
