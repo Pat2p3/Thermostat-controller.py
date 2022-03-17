@@ -15,5 +15,5 @@ switch_address is the address of the heater controller.
 Logging levels LOGGING.INFO, LOGGING.NOTSET - turns off logging.
 
 ## esp8266 variables
-STASSID "Wifi SSID"
-STAPSK  "Wifi password"
+STASSID "Wifi SSID" <br />
+STAPSK  "Wifi password" <br />
