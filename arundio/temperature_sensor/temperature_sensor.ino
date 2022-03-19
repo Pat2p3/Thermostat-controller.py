@@ -70,23 +70,12 @@ void setup(void) {
   }
 
   server.on("/", handleRoot);
-  server.on("/off", dasd);
-  server.on("/on", crap);
   server.on("/temp", temp);
   
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("HTTP server started");
 }
-
-  void crap(){
-    server.send(200, "text/plain", "ON!\r\n");
-    ron();
-  }
-  void dasd(){
-    server.send(200, "text/plain", "OFF!\r\n");
-    roff();
-  }
 
   void temp(){
     DS18B20.requestTemperatures();
