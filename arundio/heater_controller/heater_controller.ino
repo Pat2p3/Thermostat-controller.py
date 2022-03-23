@@ -5,6 +5,12 @@
 #include <stdbool.h> 
 #include "TimeLib.h" //https://github.com/PaulStoffregen/Time time library used
 
+/*
+ * The space heater has a power button and its own interal circuity. 
+ * This project stimulates the press of the power button to turn the heater on/off
+*/
+
+
 #ifndef STASSID
 #define STASSID "WIFI SSID"
 #define STAPSK  "Password"

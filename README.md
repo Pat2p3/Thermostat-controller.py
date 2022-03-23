@@ -1,8 +1,7 @@
 # Thermostat-controller
 
 Keeping a room just above freezing tyemperature is not possible with most space heaters. As they have a minmum setting that is too high.
-Thermostat-controller.py polls the temperature_sensor.ino getting readings in celcius. When its too hot or cold the heater_controller.ino turns the space heater on or off. 
-The heat turns on at temp_goal and off at temp_goal + 0.3 providing a 0.3 degree range. 
+Thermostat-controller.py polls the temperature_sensor.ino getting readings in celcius. When its too hot or cold the heater_controller.ino turns the space heater on or off.
 
 The source Thermostat-controller.py communicates with replicas temperature_sensor.ino and heater_controller.ino through http. 
 All devices should be on the same local network. IP addresses of replicas are used in the Thermostat-controller.py. The ds18b20 temperature sensor is used in the replia. 
