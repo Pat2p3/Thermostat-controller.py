@@ -79,11 +79,11 @@ def turn_off_heater_and_polling_locking():
         thread1.turn_off_polling() #locking and unlocked
 
     except Exception as e:      # can not reach Switch, http error, or json not formatted properly, lock problem
-        out_text = "Exception: Heater shutting down, sleeping for " + self.timeout + " second shutdown timeout. Exception =>: " + str(e)
+        out_text = "Exception: Heater shutting down, sleeping for " + str(thread1.timeout) + " second shutdown timeout. Exception =>: " + str(e)
         print(out_text)
         logging.info(out_text)
         
-        time.sleep(self.timeout)
+        time.sleep(thread1.timeout)
 
         if threadLock.locked():  # unlock
             threadLock.release()
