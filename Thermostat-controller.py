@@ -31,20 +31,16 @@ class pollingThread (threading.Thread):
             self.threadID = threadID
             self.name = name
             self.lock = lock
-            self.polling = True # polls heater switch, otherwise heater turns off after timeout
             self.timeout = timeout
+            self.run_polling_loop = False
 
     def run(self):
         print("Starting polling eventLoop " + self.name)
-        run_polling_loop = True
+        self.run_polling_loop = True
 
-        while(run_polling_loop == True):
+        while(self.run_polling_loop == True):           
 
-            self.lock.acquire() # LOCKED accessing polling
-            run_polling_loop = self.polling
-            self.lock.release() # UNLOCKED
-
-            if run_polling_loop == True:
+            if self.run_polling_loop == True:
                 try:
                     r = requests.get(switch_address + poll) #time intensive so accessed variable is copied to curr_polled_value
                     state = json.loads(r.text)
@@ -56,27 +52,26 @@ class pollingThread (threading.Thread):
                     print(out_text)
                     logging.info(out_text)
                                         
-                    run_polling_loop = False # update value
+                    self.run_polling_loop = False # update value
+                    self.turn_off_polling() # Locking unlocking shared boolean:poll_thread_started
 
                     time.sleep(self.timeout)      
-                        
+
             time.sleep(4) #sleep 4 seconds
             
     def turn_off_polling(self):
-
-        self.lock.acquire() # LOCKED accessing polling
-
-        self.polling = False
+        self.lock.acquire() # LOCKED accessing poll_thread_started
         global poll_thread_started
         poll_thread_started = False
+        self.run_polling_loop = False
 
         self.lock.release() # UNLOCKED        
 
 
 def turn_off_heater_and_polling_locking():
     try:
-        turn_off_heater_http()
         thread1.turn_off_polling() #locking and unlocked
+        turn_off_heater_http()
 
     except Exception as e:      # can not reach Switch, http error, or json not formatted properly, lock problem
         out_text = "Exception: Heater shutting down, sleeping for " + str(thread1.timeout) + " second shutdown timeout. Exception =>: " + str(e)
@@ -85,8 +80,6 @@ def turn_off_heater_and_polling_locking():
         
         time.sleep(thread1.timeout)
 
-        if threadLock.locked():  # unlock
-            threadLock.release()
 """
  Takes input boolean no_error, that is True on no error, False on error such that he sensor data could not be retrieved 
  due to sensor offline, or Exception
@@ -101,8 +94,8 @@ def temp_change_callback(temperature, no_error):
         turn_off_heater_and_polling_locking()
     elif no_error == True: # no error
         if float(temperature) >= temp_goal + 0.3: #turn off, at 2.3 when goal is 2.0
-            turn_off_heater_and_polling_locking() 
-        elif float(temperature) <= temp_goal:   # turn on, at 2.0 when goal is 2.0   
+            turn_off_heater_and_polling_locking()
+        elif float(temperature) <= temp_goal:   # turn on, at 2.0 when goal is 2.0
             power_on_heater_and_run_polling_locking()
 
 def turn_on_heater_http():

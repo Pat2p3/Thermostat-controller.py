@@ -1,0 +1,6 @@
+Thermostat-controller.py.pyproj
+Thermostat-controller.py.sln
+
+.vs/
+__pycache__/
+heater_switch.log
