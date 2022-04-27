@@ -86,13 +86,13 @@ def turn_off_heater_and_polling_locking():
 """
 def temp_change_callback(temperature, no_error): 
     
-    out_text = "Callback: Temperature is :" + str(temperature) + " Celsius : " + str(datetime.datetime.now())
-    print(out_text)
-    logging.info(out_text)
-
     if no_error == False: # error, so shutdown
         turn_off_heater_and_polling_locking()
     elif no_error == True: # no error
+        out_text = "Callback: Temperature is :" + str(temperature) + " Celsius : " + str(datetime.datetime.now())
+        print(out_text)
+        logging.info(out_text)
+
         if float(temperature) >= temp_goal + 0.3: #turn off, at 2.3 when goal is 2.0
             turn_off_heater_and_polling_locking()
         elif float(temperature) <= temp_goal:   # turn on, at 2.0 when goal is 2.0
@@ -172,7 +172,7 @@ if __name__=="__main__":
     logging.info(out_text)
 
     thread1 = pollingThread(1, "Thread-1", threadLock) #init thread
-    s = sensor.Sensor("192.168.1.136") # set sensor ip address
+    s = sensor.Sensor("192.168.1.136", logging) # set sensor ip address
 
     temperature_sample_rate = 1
 

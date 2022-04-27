@@ -8,7 +8,7 @@ class Sensor:
     """
   
     # put class variables inside constructor
-    def __init__(self, sensor_endpoint):
+    def __init__(self, sensor_endpoint, logging = None):
         self.ip = sensor_endpoint
         self.most_freq = None
         self.count_dict = {}
@@ -16,7 +16,14 @@ class Sensor:
         self.end_time = None
         self.max_count = 0
         self.last_sumbited_temp = None
+        self.logging_Obj = logging
         print("Sensor initalized with ip: " + sensor_endpoint)
+
+    # Takes messages and writes them to the log
+    def logMesg(self, msg):
+        if self.logging_Obj != None:
+            self.logging_Obj.info(msg)
+
     
     # Takes a callback method and int interval(seconds) as inputs and gets Temperature data from REST API on sensor.
     # calls back on significant temperature change from previous temperature >= 0.125.
@@ -64,6 +71,8 @@ class Sensor:
                     callback(most_freq_temp, True)
                 
         except Exception as e:      # Temp Sensor not accessable, or Formatting issues
-            print("Exception -> sensor class -> getTemp : " + str(e))
-            callback(self.most_freq, False)
+            error_text = "Exception -> sensor class -> getTemp : " + str(e)
+            print(error_text)
+            self.logMesg(error_text)
 
+            callback(self.most_freq, False)
