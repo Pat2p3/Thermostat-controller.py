@@ -1,6 +1,7 @@
 
 #!/usr/bin/python
 
+import ListenerService as listener
 import Sensor as sensor
 import time
 import threading
@@ -9,13 +10,16 @@ import requests
 import datetime
 import logging
 
+from zeroconf import ServiceBrowser, ServiceListener, Zeroconf # python-zeroconf
+import socket
+
 # global variables
 threadLock = threading.Lock()
 thread1 = None
 poll_thread_started = False
 temp_goal = 1.7 # degrees celcius
 
-switch_address = "http://192.168.1.64/"
+switch_address = None # address for heater later assigned with mDNS 
 toggle_on = "toggle_on"
 toggle_off = "toggle_off"
 status = "status"
@@ -39,25 +43,24 @@ class pollingThread (threading.Thread):
         self.run_polling_loop = True
 
         while(self.run_polling_loop == True):           
-
-            if self.run_polling_loop == True:
-                try:
-                    r = requests.get(switch_address + poll) #time intensive so accessed variable is copied to curr_polled_value
-                    state = json.loads(r.text)
-                    if state["state"] == "OFF":
-                        turn_on_heater_http()                        
+            
+            try:
+                r = requests.get(switch_address + poll) #time intensive
+                state = json.loads(r.text)
+                if state["state"] == "OFF":
+                    turn_on_heater_http()                        
                     
-                except Exception as e:      # can not reach Switch, http error, or json not formatted properly
-                    out_text = "Exception: Stopping Polling, heater will shutdown after " + self.timeout + "second timeout. Exception: " + str(e) + " : " + str(datetime.datetime.now())
-                    print(out_text)
-                    logging.info(out_text)
+            except Exception as e:      # can not reach Switch, http error, or json not formatted properly
+                out_text = "Exception: Stopping Polling, heater will shutdown after " + self.timeout + "second timeout. Exception: " + str(e) + " : " + str(datetime.datetime.now())
+                print(out_text)
+                logging.info(out_text)
                                         
-                    self.run_polling_loop = False # update value
-                    self.turn_off_polling() # Locking unlocking shared boolean:poll_thread_started
+                self.run_polling_loop = False # update value
+                self.turn_off_polling() # Locking unlocking shared boolean:poll_thread_started
 
-                    time.sleep(self.timeout)      
+                time.sleep(self.timeout)      
 
-            time.sleep(4) #sleep 4 seconds
+            time.sleep(self.timeout/3) # sleep
             
     def turn_off_polling(self):
         self.lock.acquire() # LOCKED accessing poll_thread_started
@@ -156,7 +159,7 @@ def power_on_heater_and_run_polling_locking():
       
 def get_heater_state():
     
-    r = requests.get(switch_address + status) #time intensive so accessed variable is copied to curr_polled_value
+    r = requests.get(switch_address + status) #time intensive
     state = json.loads(r.text)
     state = state["state"]
 
@@ -165,17 +168,50 @@ def get_heater_state():
 
     return state
 
+
 if __name__=="__main__":
+    
+    try:
+        
+        heater_service = ['_heater_cont._tcp.local.', 'esp8266_hh._heater_cont._tcp.local.'] # type, name 
+        h_ip, h_port = listener.mDNS.serviceStatus(heater_service)
 
-    out_text = "Target temperature : " + str(temp_goal) + " degrees Celcius : " + str(datetime.datetime.now())
-    print(out_text)
-    logging.info(out_text)
+        sensor_service = ['_sensor_._tcp.local.', 'esp8266_h._sensor_._tcp.local.']
+        s_ip, s_port = listener.mDNS.serviceStatus(sensor_service)
 
-    thread1 = pollingThread(1, "Thread-1", threadLock) #init thread
-    s = sensor.Sensor("192.168.1.136", logging) # set sensor ip address
+        if h_ip != None:
+            switch_address = "http://" + str(h_ip) + "/"
+        else:
+            out_text = "Not found heater"
+            print(out_text)
+            logging.info(out_text)
 
-    temperature_sample_rate = 1
+        # if sensor is alive but heater is not, start anyways to log temperature
+        # TODO: save temperatures to db
 
-    while 1 == 1: # run forever unless crl+c in terminal
-        s.getTemp(temp_change_callback)
-        time.sleep(temperature_sample_rate)
+        if s_ip != None:       
+
+            out_text = "Target temperature : " + str(temp_goal) + " degrees Celcius : " + str(datetime.datetime.now())
+            print(out_text)
+            logging.info(out_text)
+
+            thread1 = pollingThread(1, "Thread-1", threadLock) #init thread
+            s = sensor.Sensor(s_ip, logging) # set sensor ip address
+
+            temperature_sample_rate = 1
+
+            while 1 == 1: # run forever unless crl+c in terminal
+                s.getTemp(temp_change_callback)
+                time.sleep(temperature_sample_rate)
+
+        else:
+            out_text = "Not found temperature sensor"
+            print(out_text)
+            logging.info(out_text)
+
+
+    except Exception as e:
+            out_text = "Failed mDNS, Exception: " + str(e)
+            print(out_text)
+            logging.info(out_text)
+            

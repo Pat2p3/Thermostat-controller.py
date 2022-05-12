@@ -13,11 +13,9 @@
 
 #ifndef STASSID
 #define STASSID "WIFI SSID"
-#define STAPSK  "Password"
+#define STAPSK  "WIFI PASSWORD"
 #endif
 
-#define TIME_HEADER  "T"   // Header tag for serial time sync message
-#define TIME_REQUEST  7    // ASCII bell character requests a time sync message 
 
 const char* ssid = STASSID;
 const char* password = STAPSK;
@@ -40,19 +38,18 @@ void setup(void) {
   pinMode(relayPin, OUTPUT); 
   roff();
 
-//code from timer
+  //code from timer
   Serial.begin(115200);
-  while (!Serial) ; // Needed for Leonardo only
+  while (!Serial) ; // make sure serial port is ready
   pinMode(13, OUTPUT);
 
-   // Jan 1 2013 arbitrary time, so can can difference in start, end times
+   // Jan 1 2013 set arbitrary time, so can get difference in start, end times
   setTime(DEFAULT_TIME);
   end = now();
   
   Serial.println("Waiting for sync message");
-//timer
+  //timer
   
-  //Serial.begin(115200);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   Serial.println("");
@@ -68,8 +65,11 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("esp8266")) {
+  if (MDNS.begin("esp8266_hh")) {
     Serial.println("MDNS responder started");
+
+    // Add service to MDNS-SD
+    MDNS.addService("heater_cont", "tcp", 80);
   }
 
   server.on("/", handleRoot);
@@ -208,7 +208,7 @@ void loop(void) {
     if(IS_ON == true && polled == false){
       toggle_logic();
     }
-    polled = false; //set polled to false every 10 seconds, Sensor device needs to check within 20 seconds in poll()
+    polled = false; //set polled to false every 10 seconds, Sensor device needs to check within 10 seconds in poll()
     Serial.println("10 sec passed");
     digitalClockDisplay();
   } 

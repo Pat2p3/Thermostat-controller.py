@@ -65,8 +65,11 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("esp8266")) {
+  if (MDNS.begin("esp8266_h")) {
     Serial.println("MDNS responder started");
+
+    // Add service to MDNS-SD
+    MDNS.addService("sensor_", "tcp", 80);
   }
 
   server.on("/", handleRoot);
