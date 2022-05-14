@@ -47,8 +47,8 @@ class Sensor:
             else:
                 self.count_dict[temp] = count + 1
 
-                if count > self.max_count:
-                    self.max_count = count
+                if self.count_dict[temp] > self.max_count:
+                    self.max_count = self.count_dict[temp]
                     self.most_freq = temp
 
             if self.end_time - self.start_time > interval:   #15 secs is the interval roughly
