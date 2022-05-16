@@ -3,8 +3,7 @@ import socket
 
 
 """
-Class for mDNS. Will search for services on local network and once found each service 
-
+Class for mDNS. Will search for services on local network. 
 """
 
 class mDNS():    
